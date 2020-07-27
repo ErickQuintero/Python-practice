@@ -1,0 +1,7 @@
+'''Problem 7 - Generate a list of random numbers and save them in a variable (for example: a = [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]). Write one line of Python that takes this list a and makes a new list that has only the even
+elements of this list in it.\n'''
+
+import random as r
+a = r.sample(range (100),20)
+print (a)
+print('The even elements in the list are:\n',[elem for elem in a2 if elem % 2 == 0])
