@@ -1,0 +1,11 @@
+hrsPerWeek = [22,17,27,40,45]
+weeks = [48,50,42,46,43]
+names = ['John,1', 'Eric,1.5', 'Terry,2', 'Michael,4', 'Graham,2']
+
+hrs = [a * b for a,b in zip(hrsPerWeek, weeks)] # list with hrsPerWeek * weeks
+sept = [n.index(",") for n in names] # index the coma separate
+name = [names[j][:sept[j]] for j in range(len(names))] # only name
+pay = [hrs[x] * float(names[x][len(name[x]) + 1:]) for x in range(len(names))] # separate payRate and mutiply by hrs
+
+for i in range(len(names)):
+  print(name[i], 'made', int(pay[i]), 'Silver in', hrs[i], 'hours.')
