@@ -1,0 +1,206 @@
+'''
+Program based on the followng use case: 1 W2 income, 1 Student Loan (1098-E), and Dependent children under 17 (Child Tax Credit)
+'''
+import pandas as pd
+
+#Constant variables
+SINGLE_SD = 15000
+MFJ_SD = 29200
+HH_SD = 22500
+CTC = 0
+Filing = 0
+AGI = 0
+Taxable = 0
+
+#Calculate the number of children
+nChildren = eval(input("Enter number of children: "))
+def get_CTC():
+  global CTC
+  CTC = nChildren * 2000
+  return
+
+#Calulate Student Loan Deductions
+st_loan = input("Did you receive a 1098-E Form?(Y/N) ")
+if st_loan in ["N", "n", "No", "no"]:
+  pass
+else:
+  STL = eval(input("What is the amount in box 1 of the 1098-E? "))
+  if STL > 2500:
+    STL = 2500
+  else:
+    pass
+
+#Income bracket (it is easier to maintail a CSV)
+my_dict = {'TaxRate':[0.1, 0.12, 0.22, 0.24, 0.32, 0.35]
+           , 'S_lower':[0, 11601, 47151, 100526, 191951, 243726]
+           , 'S_upper':[11600, 47150, 100525, 191950, 243725, 609350]
+           , 'HH_lower':[0, 16551, 63101, 100501, 191951, 243701]
+           , 'HH_upper':[16550, 63100, 100500, 191950, 243700, 609350]
+           , 'MFJ_lower':[0, 23201, 94301, 201051, 383901, 487451]
+           , 'MFJ_upper':[23850, 94300, 201050, 383900, 487450, 731200]}
+
+df = pd.DataFrame(my_dict)
+
+#W2 info - Boxes 1 - 6
+box_1 = eval(input("Enter Wages: "))
+box_16 = box_1
+box_2 = eval(input("Enter Federal Witholding: "))
+Same_Income = input("Are boxes 1, 3, and 5 the same amount? ")
+if Same_Income in ["Yes", "yes", "Y", "y"]:
+  box_3 = box_1
+  box_5 = box_1
+else:
+  box_3 = 0
+  box_5 = 0
+if box_3 > 0:
+  pass
+else:
+  box_3 = eval(input("Enter Social Security Wages: "))
+  box_4 = eval(input("Enter Social Security Tax: "))
+if box_5 > 0:
+  pass
+else:
+  box_5 = eval(input("Enter Medicare Wages: "))
+  box_6 = eval(input("Enter Medicare Tax: "))
+
+#W2 info - Boxes 7 - 14
+Empty_7to14 = input("Are boxes 7 through 14 empty? ")
+if Empty_7to14 in ["Yes", "yes", "Y", "y"]:
+  pass
+else:
+  Box_7 = eval(input("Enter box 7: "))
+  Box_8 = eval(input("Enter box 8: "))
+  Box_9 = eval(input("Enter box 9: "))
+  Box_10 = eval(input("Enter box 10: "))
+  Box_11 = eval(input("Enter box 11: "))
+  Box_12 = eval(input("Enter box 12: "))
+  Box_13 = eval(input("Enter box 13: "))
+  Box_14 = eval(input("Enter box 14: "))
+
+#W2 info - Boxes 15 - 20
+State = input("Enter State: ")
+if State == "":
+  State = "MO"
+box_17 = eval(input("Enter State Income Tax: "))
+Empty_18to20 = input("Are boxes 18 through 20 empty? ")
+if Empty_18to20 in ["Yes", "yes", "Y", "y"]:
+  pass
+else:
+  Box_18 = eval(input("Enter box 18: "))
+  Box_19 = eval(input("Enter box 19: "))
+  Box_20 = eval(input("Enter box 20: "))
+
+#Filing Status
+def get_filing(status):
+  status = input("Enter Filing Status (S for Single, MFS for Married Filing\
+ Separate, HH for Head of Household, and MFJ for Married Filing Join): ")
+  global Filing
+  if status in ['S' , 's', 'Single', 'single', 'MFS', 'mfs', 'Married Filing Separate', 'married filing separate', 'Separate', 'separate']:
+    Filing = 'S'
+  elif status in ['HH' , 'hh', 'Head of Household', 'head of household']:
+    Filing = 'HH'
+  else:
+    Filing = 'MFJ'
+  return Filing
+
+#Calculate Adjusted Gross Income (AGI)
+def get_AGI(Box_1, STL):
+  global AGI
+  if STL > 0:
+    AGI = box_1 - STL
+  else:
+    AGI = box_1
+  return AGI
+
+#Calculate Taxable Income
+def get_TaxableIncome(Filing, AGI):
+  global Taxable
+  if Filing == 'S':
+    Taxable = AGI - SINGLE_SD
+  elif Filing == 'HH':
+    Taxable = AGI - HH_SD
+  elif Filing == 'MFJ':
+    Taxable = AGI - MFJ_SD
+  return Taxable
+
+#Tax amount
+def get_TaxAmount(Filing, Taxable):
+  if Filing == 'S':
+    if Taxable < df['S_upper'][0]:
+      tax = Taxable * df['TaxRate'][0]
+      tax = round(tax, 2)
+    elif df['S_upper'][0] < Taxable < df['S_upper'][1]:
+      tax = (df['S_upper'][0] * df['TaxRate'][0]) + ((Taxable - df['S_upper'][0]) * df['TaxRate'][1])
+      tax = round(tax, 2)
+    elif df['S_upper'][1] < Taxable < df['S_upper'][2]:
+      tax = (df['S_upper'][0] * df['TaxRate'][0]) + ((df['S_upper'][1] - df['S_upper'][0]) * df['TaxRate'][1]) + ((Taxable - df['S_upper'][1]) * df['TaxRate'][2])
+      tax = round(tax, 2)
+    elif df['S_upper'][2] < Taxable < df['S_upper'][3]:
+      tax = (df['S_upper'][0] * df['TaxRate'][0]) + ((df['S_upper'][1] - df['S_upper'][0]) * df['TaxRate'][1]) + ((df['S_upper'][2] - df['S_upper'][1]) * df['TaxRate'][2]) + ((Taxable - df['S_upper'][2]) * df['TaxRate'][3])
+      tax = round(tax, 2)
+    elif df['S_upper'][3] < Taxable < df['S_upper'][4]:
+      tax = (df['S_upper'][0] * df['TaxRate'][0]) + ((df['S_upper'][1] - df['S_upper'][0]) * df['TaxRate'][1]) + ((df['S_upper'][2] - df['S_upper'][1]) * df['TaxRate'][2]) + ((df['S_upper'][3] - df['S_upper'][2]) * df['TaxRate'][3]) + ((Taxable - df['S_upper'][3]) * df['TaxRate'][4])
+      tax = round(tax, 2)
+    elif df['S_upper'][4] < Taxable < df['S_upper'][5]:
+      tax = (df['S_upper'][0] * df['TaxRate'][0]) + ((df['S_upper'][1] - df['S_upper'][0]) * df['TaxRate'][1]) + ((df['S_upper'][2] - df['S_upper'][1]) * df['TaxRate'][2]) + ((df['S_upper'][3] - df['S_upper'][2]) * df['TaxRate'][3]) + ((df['S_upper'][4] - df['S_upper'][3]) * df['TaxRate'][4]) + ((Taxable - df['S_upper'][4]) * df['TaxRate'][5])
+      tax = round(tax, 2)
+    elif Taxable >= df['S_upper'][5]:
+      tax = (df['S_upper'][0] * df['TaxRate'][0]) + ((df['S_upper'][1] - df['S_upper'][0]) * df['TaxRate'][1]) + ((df['S_upper'][2] - df['S_upper'][1]) * df['TaxRate'][2]) + ((df['S_upper'][3] - df['S_upper'][2]) * df['TaxRate'][3]) + ((df['S_upper'][4] - df['S_upper'][3]) * df['TaxRate'][4]) + ((df['S_upper'][5] - df['S_upper'][4]) * df['TaxRate'][5]) + ((Taxable - df['S_upper'][5]) * 0.37)
+      tax = round(tax, 2)
+  elif Filing == 'HH':
+    if Taxable < df['HH_upper'][0]:
+      tax = Taxable * df['TaxRate'][0]
+      tax = round(tax, 2)
+    elif df['HH_upper'][0] < Taxable < df['HH_upper'][1]:
+      tax = (df['HH_upper'][0] * df['TaxRate'][0]) + ((Taxable - df['HH_upper'][0]) * df['TaxRate'][1])
+      tax = round(tax, 2)
+    elif df['HH_upper'][1] < Taxable < df['HH_upper'][2]:
+      tax = (df['HH_upper'][0] * df['TaxRate'][0]) + ((df['HH_upper'][1] - df['HH_upper'][0]) * df['TaxRate'][1]) + ((Taxable - df['HH_upper'][1]) * df['TaxRate'][2])
+      tax = round(tax, 2)
+    elif df['HH_upper'][2] < Taxable < df['HH_upper'][3]:
+      tax = (df['HH_upper'][0] * df['TaxRate'][0]) + ((df['HH_upper'][1] - df['HH_upper'][0]) * df['TaxRate'][1]) + ((df['HH_upper'][2] - df['HH_upper'][1]) * df['TaxRate'][2]) + ((Taxable - df['HH_upper'][2]) * df['TaxRate'][3])
+      tax = round(tax, 2)
+    elif df['HH_upper'][3] < Taxable < df['HH_upper'][4]:
+      tax = (df['HH_upper'][0] * df['TaxRate'][0]) + ((df['HH_upper'][1] - df['HH_upper'][0]) * df['TaxRate'][1]) + ((df['HH_upper'][2] - df['HH_upper'][1]) * df['TaxRate'][2]) + ((df['HH_upper'][3] - df['HH_upper'][2]) * df['TaxRate'][3]) + ((Taxable - df['HH_upper'][3]) * df['TaxRate'][4])
+      tax = round(tax, 2)
+    elif df['HH_upper'][4] < Taxable < df['HH_upper'][5]:
+      tax = (df['HH_upper'][0] * df['TaxRate'][0]) + ((df['HH_upper'][1] - df['HH_upper'][0]) * df['TaxRate'][1]) + ((df['HH_upper'][2] - df['HH_upper'][1]) * df['TaxRate'][2]) + ((df['HH_upper'][3] - df['HH_upper'][2]) * df['TaxRate'][3]) + ((df['HH_upper'][4] - df['HH_upper'][3]) * df['TaxRate'][4]) + ((Taxable - df['HH_upper'][4]) * df['TaxRate'][5])
+      tax = round(tax, 2)
+    elif Taxable >= df['HH_upper'][5]:
+      tax = (df['HH_upper'][0] * df['TaxRate'][0]) + ((df['HH_upper'][1] - df['HH_upper'][0]) * df['TaxRate'][1]) + ((df['HH_upper'][2] - df['HH_upper'][1]) * df['TaxRate'][2]) + ((df['HH_upper'][3] - df['HH_upper'][2]) * df['TaxRate'][3]) + ((df['HH_upper'][4] - df['HH_upper'][3]) * df['TaxRate'][4]) + ((df['HH_upper'][5] - df['HH_upper'][4]) * df['TaxRate'][5]) + ((Taxable - df['HH_upper'][5]) * 0.37)
+      tax = round(tax, 2)
+  else:
+    if Taxable < df['MFJ_upper'][0]:
+      tax = Taxable * df['TaxRate'][0]
+      tax = round(tax, 2)
+    elif df['MFJ_upper'][0] < Taxable < df['MFJ_upper'][1]:
+      tax = (df['MFJ_upper'][0] * df['TaxRate'][0]) + ((Taxable - df['MFJ_upper'][0]) * df['TaxRate'][1])
+      tax = round(tax, 2)
+    elif df['MFJ_upper'][1] < Taxable < df['MFJ_upper'][2]:
+      tax = (df['MFJ_upper'][0] * df['TaxRate'][0]) + ((df['MFJ_upper'][1] - df['MFJ_upper'][0]) * df['TaxRate'][1]) + ((Taxable - df['MFJ_upper'][1]) * df['TaxRate'][2])
+      tax = round(tax, 2)
+    elif df['MFJ_upper'][2] < Taxable < df['MFJ_upper'][3]:
+      tax = (df['MFJ_upper'][0] * df['TaxRate'][0]) + ((df['MFJ_upper'][1] - df['MFJ_upper'][0]) * df['TaxRate'][1]) + ((df['MFJ_upper'][2] - df['MFJ_upper'][1]) * df['TaxRate'][2]) + ((Taxable - df['MFJ_upper'][2]) * df['TaxRate'][3])
+      tax = round(tax, 2)
+    elif df['MFJ_upper'][3] < Taxable < df['MFJ_upper'][4]:
+      tax = (df['MFJ_upper'][0] * df['TaxRate'][0]) + ((df['MFJ_upper'][1] - df['MFJ_upper'][0]) * df['TaxRate'][1]) + ((df['MFJ_upper'][2] - df['MFJ_upper'][1]) * df['TaxRate'][2]) + ((df['MFJ_upper'][3] - df['MFJ_upper'][2]) * df['TaxRate'][3]) + ((Taxable - df['MFJ_upper'][3]) * df['TaxRate'][4])
+      tax = round(tax, 2)
+    elif df['MFJ_upper'][4] < Taxable < df['MFJ_upper'][5]:
+      tax = (df['MFJ_upper'][0] * df['TaxRate'][0]) + ((df['MFJ_upper'][1] - df['MFJ_upper'][0]) * df['TaxRate'][1]) + ((df['MFJ_upper'][2] - df['MFJ_upper'][1]) * df['TaxRate'][2]) + ((df['MFJ_upper'][3] - df['MFJ_upper'][2]) * df['TaxRate'][3]) + ((df['MFJ_upper'][4] - df['MFJ_upper'][3]) * df['TaxRate'][4]) + ((Taxable - df['MFJ_upper'][4]) * df['TaxRate'][5])
+      tax = round(tax, 2)
+    elif Taxable >= df['MFJ_upper'][5]:
+      tax = (df['MFJ_upper'][0] * df['TaxRate'][0]) + ((df['MFJ_upper'][1] - df['MFJ_upper'][0]) * df['TaxRate'][1]) + ((df['MFJ_upper'][2] - df['MFJ_upper'][1]) * df['TaxRate'][2]) + ((df['MFJ_upper'][3] - df['MFJ_upper'][2]) * df['TaxRate'][3]) + ((df['MFJ_upper'][4] - df['MFJ_upper'][3]) * df['TaxRate'][4]) + ((df['MFJ_upper'][5] - df['MFJ_upper'][4]) * df['TaxRate'][5]) + ((Taxable - df['MFJ_upper'][5]) * 0.37)
+      tax = round(tax, 2)
+    return tax
+
+tax = int(round(get_TaxAmount(Filing, TaxableIncome), 0))
+
+#Owe or Refund?
+print('Taxable Income $' + str(TaxableIncome))
+print('Expected withholding $' + str(TotalTax))
+print('Amount withheld $' + str(box_2))
+IRS = TotalTax - box_2
+if IRS > 0:
+  print("You owe $" + str(IRS) + ".")
+else:
+  print("Your refund $" + str(abs(IRS)) + ".")
