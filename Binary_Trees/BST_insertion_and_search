@@ -1,0 +1,80 @@
+'''Made used of the Node class and created a new BST class with insert, search
+and inorder functions. Each with their own private functions.
+'''
+# Define a Node class for the BST
+class Node:
+    def __init__(self, key):
+        self.key = key
+        self.left = None
+        self.right = None
+
+
+# Define a BST class
+class BST:
+    def __init__(self):
+        self.root = None
+
+    # --- Insert a key into the BST ---
+    def insert(self, key):
+        if self.root is None:
+            self.root = Node(key)
+        else:
+            self._insert(self.root, key)
+
+    def _insert(self, root, key):
+        if key < root.key:
+            if root.left is None:
+                root.left = Node(key)
+            else:
+                self._insert(root.left, key)
+        elif key > root.key:
+            if root.right is None:
+                root.right = Node(key)
+            else:
+                self._insert(root.right, key)
+        # Duplicate keys are ignored (optional)
+        else:
+            pass
+
+    # --- Search for a key in the BST ---
+    def search(self, key):
+        return self._search(self.root, key)
+
+    def _search(self, root, key):
+        if root is None:
+            return None
+        if key == root.key:
+            return root
+        elif key < root.key:
+            return self._search(root.left, key)
+        else:
+            return self._search(root.right, key)
+
+    # --- Inorder traversal (for debugging) ---
+    def inorder(self):
+        def _inorder(node):
+            if node:
+                _inorder(node.left)
+                print(node.key, end=" ")
+                _inorder(node.right)
+        _inorder(self.root)
+        print()
+
+
+# Example Usage
+if __name__ == "__main__":
+    bst = BST()
+    # Insert nodes
+    for key in [50, 30, 70, 20, 40, 60, 80]:
+        bst.insert(key)
+
+    print("Inorder Traversal of BST:")
+    bst.inorder()
+
+    # Search for keys
+    for k in [40, 25]:
+        result = bst.search(k)
+        if result:
+            print(f"Found key {k} in BST.")
+        else:
+            print(f"Key {k} not found in BST.")
