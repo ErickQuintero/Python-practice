@@ -1,0 +1,67 @@
+'''the height of the tree is the longest path from the root node to the leaf
+node. So I created a height function in the node class that returns the max()
+number of nodes (either on the left or right of the root). I also decided to
+check if the tree is balanced, so there is an is_balanced() function to compare
+the heights of the left and right subtrees.
+'''
+class Node:
+    def __init__(self, key):
+        self.key = key
+        self.left = None
+        self.right = None
+
+
+# --- Compute height of the tree ---
+def height(root):
+    if root is None:
+        return 0
+    left_h = height(root.left)
+    right_h = height(root.right)
+    return 1 + max(left_h, right_h)
+
+
+# --- Check if tree is balanced ---
+def is_balanced(root):
+    """
+    Returns True if tree is height-balanced, else False.
+    A binary tree is balanced if for every node, the height difference
+    between left and right subtrees is <= 1.
+    """
+
+    def check(node):
+        # Returns (is_balanced, height)
+        if node is None:
+            return True, 0
+
+        left_bal, left_h = check(node.left)
+        right_bal, right_h = check(node.right)
+
+        # A node is balanced if its subtrees are balanced
+        # and their heights differ by at most 1
+        balanced = left_bal and right_bal and abs(left_h - right_h) <= 1
+        return balanced, 1 + max(left_h, right_h)
+
+    balanced, _ = check(root)
+    return balanced
+
+
+# --- Example Usage ---
+if __name__ == "__main__":
+    # Build a balanced binary tree
+    root = Node(10)
+    root.left = Node(5)
+    root.right = Node(20)
+    root.left.left = Node(3)
+    root.left.right = Node(7)
+    root.right.right = Node(30)
+
+    print("Height of tree:", height(root))
+    print("Is balanced?", is_balanced(root))
+
+    # Make it unbalanced
+    root.right.right.right = Node(40)
+    root.right.right.right.right = Node(50)
+
+    print("\nAfter adding more nodes:")
+    print("Height of tree:", height(root))
+    print("Is balanced?", is_balanced(root))
