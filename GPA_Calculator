@@ -1,0 +1,87 @@
+'''Create a program that calculates a student's GPA given the final grade and number of unites/hr.
+
+Step-by-Step GPA Calculation
+
+Assign Point Values: Use the standard scale for each letter grade (A=4, B=3, C=2, D=1, F=0).
+Multiply by Credit Hours: For each course, multiply the point value by the number of credit hours (or units) for that course to get its "grade points".
+Sum Totals: Add up all the credit hours and all the grade points from your courses.
+Divide: Divide your total grade points by your total credit hours to find your GPA.
+Formula: GPA = Total Grade Points / Total Credit Hours
+
+Example of Semester GPA
+
+Course 1: English (3 credits) = A (4 points) 3 credits * 4 points = 12 grade points
+Course 2: Math (4 credits) = B (3 points) 4 credits * 3 points = 12 grade points
+Course 3: History (3 credits) = C (2 points) 3 credits * 2 points = 6 grade points
+Totals: 10 credit hours, 30 grade points GPA: 30 / 10 = 3.0 GPA
+
+Use try/except to handle when the user enter scores rather than letter grade 
+and for invalid inputs.
+'''
+def get_points(points):
+    try:
+        if isinstance(points, (int, float)) or str(points).isdigit():
+            points = int(points)
+            if 90 <= points <= 100:
+                return 4
+            elif 80 <= points < 90:
+                return 3
+            elif 70 <= points < 80:
+                return 2
+            elif 60 <= points < 70:
+                return 1
+            elif 0 <= points < 60:
+                return 0
+            else:
+                raise ValueError("Score out of range")
+
+        # when input is letter grade
+        points = points.upper()
+        grade_map = {
+            "A": 4,
+            "B": 3,
+            "C": 2,
+            "D": 1,
+            "F": 0
+        }
+
+        if points in grade_map:
+            return grade_map[points]
+        else:
+            raise ValueError("Invalid letter grade")
+
+    except ValueError as e:
+        print(f"Invalid input: {e}")
+        return None
+
+# get the components (grade and credits)
+def components(myclasses):
+    total_points = 0
+    total_credits = 0
+
+    for grade, credit in myclasses:
+        points = get_points(grade)
+        if points is None:
+            continue  # skip invalid entries
+
+        total_points += points * credit
+        total_credits += credit
+
+    return total_points, total_credits
+
+def calculate_gpa(myclasses):
+    total_points, total_credits = components(myclasses)
+    if total_credits == 0:
+        return 0
+    return round(total_points / total_credits, 2)
+
+
+myclasses = [
+    ("A", 3),
+    (92, 4),
+    ("B", 3),
+    (76, 2)
+]
+
+gpa = calculate_gpa(myclasses)
+print("GPA:", gpa)
