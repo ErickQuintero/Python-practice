@@ -1,0 +1,62 @@
+'''Generate an amortization schedule for a fixed-rate loan.
+
+Parameters:
+  principal (float): Loan amount
+  annual_rate (float): Annual interest rate (e.g. 5 for 5%)
+  years (int): Loan term in years
+
+Returns:
+  List[Dict]: Amortization schedule by payment period
+'''
+
+from typing import List, Dict
+
+def amortization_schedule(principal: float, annual_rate: float, years: int) -> List[Dict]:
+
+    monthly_rate = annual_rate / 100 / 12
+    total_payments = years * 12
+
+    # Monthly payment formula
+    monthly_payment = (
+        principal * monthly_rate *
+        (1 + monthly_rate) ** total_payments
+    ) / (
+        (1 + monthly_rate) ** total_payments - 1
+    )
+
+    balance = principal
+    schedule = []
+
+    for payment_num in range(1, total_payments + 1):
+        interest_payment = balance * monthly_rate
+        principal_payment = monthly_payment - interest_payment
+        balance -= principal_payment
+
+        # Avoid tiny negative balance due to rounding
+        balance = max(balance, 0)
+
+        interest_pct = (interest_payment / monthly_payment) * 100
+        principal_pct = (principal_payment / monthly_payment) * 100
+
+        schedule.append({
+            "payment_number": payment_num,
+            "total_payment": '$' + str(round(monthly_payment, 2)),
+            "principal_payment": '$' + str(round(principal_payment, 2)),
+            "interest_payment": '$' + str(round(interest_payment, 2)),
+            "principal_percent": '$' + str(round(principal_pct, 2)),
+            "interest_percent": str(round(interest_pct, 2)) + '%',
+            "remaining_balance": str(round(balance, 2)) + '%'
+        })
+
+    return schedule
+
+schedule = amortization_schedule(
+    principal=300_000,
+    annual_rate=5.5,
+    years=30
+)
+
+# Print payments
+for row in schedule[:]:
+    print(row)
+
